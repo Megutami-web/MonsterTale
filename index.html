@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>MonsterTale</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="モンスターテイル">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#2b1d12">
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:#0d0b09;font-family:'M PLUS Rounded 1c',system-ui,sans-serif;color:#fff;overscroll-behavior:none;-webkit-user-select:none;user-select:none;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+button{font-family:inherit;color:inherit;cursor:pointer}
+#app{position:relative;max-width:440px;margin:0 auto;height:100vh;height:100dvh;overflow:hidden;background:#000}
+.screen{position:absolute;inset:0;display:flex;flex-direction:column;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom);background-size:cover;background-position:center}
+.ts{text-shadow:0 1px 3px #000,0 0 2px #000}
+/* tavern placeholder */
+.tav{position:absolute;inset:0;z-index:0;background:repeating-linear-gradient(90deg,#5b3b22 0 44px,#4a2f1a 44px 47px)}
+.tav .win{position:absolute;left:12%;top:14%;width:28%;height:20%;background:radial-gradient(#ffe7a8,#f0a640);border:6px solid #3a2414;box-shadow:0 0 60px #ffb54a88}
+.tav .win:after{content:'';position:absolute;left:50%;top:0;bottom:0;width:5px;background:#3a2414}
+.tav .shelf{position:absolute;right:8%;top:18%;width:40%;height:7px;background:#2e1c0f;box-shadow:0 46px 0 #2e1c0f}
+.tav .bt{position:absolute;bottom:7px;width:9px;border-radius:3px 3px 1px 1px}
+.tav .lamp{position:absolute;left:50%;top:0;width:2px;height:9%;background:#222}
+.tav .lamp:after{content:'';position:absolute;left:-11px;bottom:-14px;width:24px;height:16px;border-radius:12px 12px 4px 4px;background:#ffcf6a;box-shadow:0 0 50px 20px #ffb54a66}
+.tav .floor{position:absolute;left:0;right:0;bottom:0;height:34%;background:repeating-linear-gradient(0deg,#3b2414 0 22px,#2f1c0f 22px 24px)}
+.tav .table{position:absolute;left:-6%;bottom:22%;width:38%;height:16px;border-radius:6px;background:#6b4325;box-shadow:0 18px 0 -4px #4a2d18}
+/* hud */
+.hud{position:relative;z-index:2;padding:8px 10px 0}
+.hrow{display:flex;align-items:center;gap:8px}
+.frame{border:2px solid rgba(255,255,255,.9);border-radius:10px;padding:3px 9px;background:transparent;font-weight:800;white-space:nowrap;text-shadow:0 1px 3px #000}
+.gold{color:#ffe27a}
+.stam{flex:1;min-width:0}
+.sbar{height:11px;border-radius:6px;background:#8d8d8d;overflow:hidden;border:1.5px solid rgba(255,255,255,.85)}
+.sbar i{display:block;height:100%;background:#35d14b;transition:width .3s}
+.stxt{font-size:11px;text-align:center;font-weight:800;text-shadow:0 1px 3px #000;margin-top:1px}
+.stxt.over{color:#a8ffb4}
+.uname{max-width:120px;overflow:hidden;text-overflow:ellipsis;font-size:13px}
+.uname small{margin-left:5px;font-size:10px;opacity:.9}
+.gear{position:absolute;right:10px;top:46px;background:rgba(0,0,0,.35);border:1.5px solid rgba(255,255,255,.7);border-radius:50%;width:34px;height:34px;font-size:17px}
+.stagebox{position:relative;z-index:2;margin:10px auto 0;display:flex;align-items:center;gap:10px;background:#1f3a1d;border:3px solid #a6e07e;border-radius:12px;padding:6px 16px;box-shadow:0 4px 0 #0e1d0d,0 0 18px #a6e07e55}
+.stagebox .w{font-size:13px;color:#d6f5c2}
+.stagebox b{font-size:20px;letter-spacing:1px}
+.side{position:absolute;right:10px;top:43%;z-index:3;display:flex;flex-direction:column;gap:12px}
+.sidebtn{position:relative;width:68px;height:64px;border-radius:16px;border:2px solid rgba(255,255,255,.9);background:rgba(30,18,8,.55);font-size:24px;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1}
+.sidebtn span{font-size:9.5px;white-space:nowrap;font-weight:800;margin-top:4px}
+.dot{position:absolute;right:-4px;top:-4px;width:14px;height:14px;border-radius:50%;background:#ff3b3b;border:2px solid #fff}
+.stage-floor{position:relative;z-index:2;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:16px}
+.monwrap{position:relative;cursor:pointer}
+.mon{display:block}
+.mon svg,.mon img{width:100%;height:100%;display:block;object-fit:contain}
+img.mon{object-fit:contain}
+.big{width:180px;height:165px;animation:bob 2.2s ease-in-out infinite;transform-origin:50% 100%}
+@keyframes bob{0%,100%{transform:translateY(0) scale(1,1)}50%{transform:translateY(-5px) scale(1.03,.97)}}
+.hop{animation:hop .45s ease-out}
+@keyframes hop{0%{transform:translateY(0)}40%{transform:translateY(-26px) scale(.95,1.06)}100%{transform:translateY(0)}}
+.mname{font-weight:800;font-size:16px;text-shadow:0 1px 3px #000;margin-top:4px}
+.mname span{font-size:13px;color:#ffe27a}
+.expbar{width:150px;height:7px;border-radius:4px;background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.7);overflow:hidden;margin-top:4px}
+.expbar i{display:block;height:100%;background:#5ab8ff}
+.float{position:absolute;left:50%;top:0;transform:translateX(-50%);white-space:nowrap;font-weight:800;font-size:15px;text-shadow:0 1px 3px #000,0 0 3px #000;animation:floatUp 1.3s ease-out forwards;pointer-events:none;z-index:5}
+@keyframes floatUp{0%{opacity:0;transform:translate(-50%,10px)}15%{opacity:1}100%{opacity:0;transform:translate(-50%,-50px)}}
+.bottom{position:relative;z-index:3;display:flex;gap:8px;padding:8px 10px 12px}
+.bbtn{flex:1;height:64px;border-radius:14px;border:2px solid rgba(255,255,255,.9);background:rgba(40,24,10,.75);font-size:22px;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1;box-shadow:0 4px 0 rgba(0,0,0,.45)}
+.bbtn span{font-size:12px;font-weight:800;margin-top:5px}
+.bbtn.adv{flex:1.3;background:linear-gradient(#e0702e,#b5461b);touch-action:none}
+.bbtn.adv.holding{background:linear-gradient(#ff9a45,#d9581f);box-shadow:0 0 18px #ffb26a}
+.bbtn:active{transform:translateY(2px);box-shadow:0 2px 0 rgba(0,0,0,.45)}
+/* generic panels */
+.panel-screen{background:linear-gradient(#2b1d12,#17100a)}
+.topbar{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid #ffffff22}
+.topbar h2{flex:1;margin:0;font-size:18px}
+.back{background:none;border:2px solid #fff9;border-radius:10px;padding:4px 10px;font-weight:800}
+.content{flex:1;overflow:auto;padding:12px}
+.row{display:flex;align-items:center;gap:10px;background:#ffffff10;border:1px solid #ffffff22;border-radius:12px;padding:10px;margin-bottom:9px}
+.row .grow{flex:1;min-width:0}
+.row small{display:block;color:#d9c9b4;font-size:11px;margin-top:2px}
+.btn{border:none;border-radius:10px;padding:8px 14px;font-weight:800;background:linear-gradient(#f0a640,#c97a1c);box-shadow:0 3px 0 #7a4a10;white-space:nowrap}
+.btn:disabled{background:#555;box-shadow:0 3px 0 #333;color:#aaa}
+.btn.blue{background:linear-gradient(#4aa3ff,#2a6fd0);box-shadow:0 3px 0 #164080}
+.btn.red{background:linear-gradient(#ff6a5a,#c8352a);box-shadow:0 3px 0 #6e1a12}
+.btn.ghost{background:#ffffff18;box-shadow:none;border:1.5px solid #fff6}
+.tabs{display:flex;gap:6px;padding:8px 12px 0}
+.tab{flex:1;padding:8px 0;border-radius:10px 10px 0 0;border:1.5px solid #fff4;border-bottom:none;background:#ffffff0c;font-weight:800}
+.tab.on{background:#f0a64033;border-color:#f0a640}
+/* rucksack */
+.nav{display:flex;justify-content:space-around;padding:8px 6px 12px;border-top:1px solid #ffffff22;background:#120c07}
+.nav button{width:52px;height:46px;border-radius:12px;border:1.5px solid transparent;background:none;font-size:24px}
+.nav button.on{border-color:#f0a640;background:#f0a64022}
+.cell{position:relative;aspect-ratio:1;border-radius:9px;border:2.5px solid #fff;background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;font-size:24px}
+.cell.r0{border-color:#ffffff}.cell.r1{border-color:#9a9a9a}.cell.r2{border-color:#3b82f6;box-shadow:inset 0 0 8px #3b82f688}.cell.r3{border-color:#f2c230;box-shadow:inset 0 0 10px #f2c23099,0 0 6px #f2c23066}
+.cell.emp{border:1.5px dashed #ffffff22;background:#ffffff06}
+.cell svg,.cell img{width:78%;height:78%}
+.cell .cnt{position:absolute;right:3px;bottom:1px;font-size:11px;font-weight:800;text-shadow:0 1px 2px #000}
+.cell .rar{position:absolute;left:3px;top:1px;font-size:9px;font-weight:800;text-shadow:0 1px 2px #000}
+.cell .plus{position:absolute;right:3px;bottom:1px;font-size:10px;font-weight:800;color:#7dff8a;text-shadow:0 1px 2px #000}
+.cell.sel{outline:3px solid #ff5a5a;outline-offset:1px}
+.cell.sel:after{content:'✓';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#ff3b3b55;font-size:22px;border-radius:6px}
+[data-drag]{touch-action:none;cursor:grab}
+.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}
+.pages{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;flex:1;scrollbar-width:none}
+.pages::-webkit-scrollbar{display:none}
+.page{flex:0 0 100%;scroll-snap-align:start;overflow-y:auto;padding:12px}
+.dots{display:flex;justify-content:center;gap:7px;padding:6px}
+.dots i{width:8px;height:8px;border-radius:50%;background:#fff3}
+.dots i.on{background:#f0a640}
+.dragghost{position:fixed;z-index:999;width:56px;height:56px;pointer-events:none;opacity:.9;transform:translate(-50%,-50%) scale(1.1)}
+.eqtop{display:flex;align-items:center;justify-content:center;gap:10px;padding:6px 0 10px}
+.slotcol{display:flex;flex-direction:column;gap:10px}
+.slot{width:70px;text-align:center}
+.slot .lab{font-size:10px;font-weight:800;color:#e9d7bf;margin-bottom:2px}
+.slot .cell{width:64px;margin:0 auto}
+.slot.hot .cell{outline:3px solid #7dff8a}
+.eqmon{width:120px;height:110px}
+.mini{width:46px;height:42px;flex:none}
+.bmon .mon{width:100%;height:100%}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.chip{border:1.5px solid #fff5;border-radius:20px;padding:4px 12px;background:none;font-weight:800;font-size:12px}
+.chip.on{background:#f0a640;border-color:#f0a640;color:#2b1a08}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px}
+.stats div{background:#ffffff10;border-radius:8px;padding:5px;text-align:center;font-size:11px}
+.stats b{display:block;font-size:15px}
+.stats em{font-style:normal;color:#7dff8a;font-size:10px}
+.sttl{font-weight:800;font-size:13px;margin:4px 0 8px;color:#e9d7bf}
+.storage.hot{outline:2px dashed #7dff8a;border-radius:10px}
+.moncards{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.mcard{position:relative;border-radius:14px;border:2px solid #ffffff33;background:#ffffff0c;padding:10px;text-align:center}
+.mcard.on{border-color:#f0a640;background:#f0a64018}
+.mcard .mon{width:96px;height:88px;margin:0 auto}
+.mcard .badge{position:absolute;left:8px;top:8px;font-size:10px;font-weight:800;background:#f0a640;color:#2b1a08;border-radius:8px;padding:1px 7px}
+.sil{filter:brightness(0) opacity(.55)}
+/* map */
+.wmap{position:absolute;inset:0}
+.wmap svg,.wmap img{width:100%;height:100%;display:block}
+.wpt{position:absolute;transform:translate(-50%,-50%);background:none;border:none;padding:0;display:flex;flex-direction:column;align-items:center}
+.wpt .ring{width:40px;height:40px;border-radius:50%;background:radial-gradient(#fff 0 20%,#ffe9a0 35%,#ffbf3a99 60%,transparent 72%);animation:glow 1.6s ease-in-out infinite}
+.wpt.lock .ring{background:radial-gradient(#ddd 0 18%,#aaa8 40%,transparent 70%);animation:none;opacity:.8}
+@keyframes glow{0%,100%{transform:scale(1)}50%{transform:scale(1.18)}}
+.wpt .nm{margin-top:2px;white-space:nowrap;font-size:12px;font-weight:800;background:rgba(0,0,0,.6);border:1.5px solid #ffffffaa;border-radius:10px;padding:2px 8px}
+.wpt.lock .nm{opacity:.75}
+.maphdr{position:absolute;left:8px;right:8px;top:calc(8px + env(safe-area-inset-top));z-index:3;display:flex;gap:6px;align-items:center}
+.pill{background:rgba(0,0,0,.55);border:1.5px solid #fff9;border-radius:10px;padding:3px 8px;font-size:12px;font-weight:800;white-space:nowrap}
+/* world */
+.forest{background:linear-gradient(#9fd7ff 0%,#cdeccf 38%,#5f9b4c 39%,#3e7a34 100%)}
+.trees{position:absolute;left:0;right:0;top:22%;height:22%;z-index:0}
+.stagepath{position:relative;flex:1;z-index:1}
+.sring{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;background:none;border:none;padding:0}
+.sring .stone{width:66px;height:66px;border-radius:50%;border:9px dotted #8c929b;background:radial-gradient(#d5f5c8 0 30%,#7fae6f 70%);box-shadow:0 5px 0 #0004;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;color:#24341f}
+.sring img.stone{border:none;background:none;box-shadow:none;object-fit:contain}
+.sring.sel .stone{box-shadow:0 0 0 4px #ffe14d,0 0 22px #ffe14d}
+.sring.lock .stone{filter:grayscale(1) brightness(.6)}
+.sring .lbl{margin-top:3px;font-size:11px;font-weight:800;background:rgba(0,0,0,.55);border-radius:8px;padding:1px 7px;white-space:nowrap}
+.spanel{position:relative;z-index:2;margin:0 10px 12px;background:rgba(20,14,8,.85);border:2px solid #fff8;border-radius:14px;padding:10px 12px;display:flex;align-items:center;gap:10px}
+/* battle */
+.battle{background:linear-gradient(#8fcfff 0%,#cdeccf 45%,#4f8a3f 46%,#33622b 100%)}
+.bfield{position:relative;flex:1}
+.bmon{position:absolute;bottom:20%;width:150px;height:140px}
+.bmon.ally{left:4%}
+.bmon.enemy{right:4%}
+.hpbox{position:absolute;bottom:calc(20% + 150px);width:150px;font-size:12px;font-weight:800;text-shadow:0 1px 3px #000}
+.hpbox.ally{left:4%}.hpbox.enemy{right:4%;text-align:right}
+.hp{height:10px;border-radius:5px;background:#333;border:1.5px solid #fff;overflow:hidden;margin-top:2px}
+.hp i{display:block;height:100%;background:#4ee05f;transition:width .35s}
+.hp i.low{background:#ffb02e}.hp i.crit{background:#ff4040}
+.lungeR{animation:lungeR calc(.4s / var(--spd,1))}.lungeL{animation:lungeL calc(.4s / var(--spd,1))}
+.spdbtn{position:absolute;right:10px;top:calc(8px + env(safe-area-inset-top));z-index:4;min-width:64px;padding:6px 10px;border-radius:12px;border:2px solid #fff;background:rgba(0,0,0,.55);font-weight:800;font-size:14px}
+.spdbtn.on{background:#e0702e;border-color:#ffd08a}
+@keyframes lungeR{50%{transform:translateX(60px)}}
+@keyframes lungeL{50%{transform:translateX(-60px)}}
+.hit{animation:hit calc(.35s / var(--spd,1))}
+@keyframes hit{0%,100%{transform:translateX(0);filter:none}25%{transform:translateX(-8px);filter:brightness(2.2)}75%{transform:translateX(8px)}}
+.dmg{position:absolute;font-size:26px;font-weight:800;color:#fff;text-shadow:0 2px 0 #c22,0 0 6px #000;animation:floatUp 1s forwards;pointer-events:none}
+.bres{position:absolute;inset:0;z-index:10;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center}
+.bres .card{width:82%;background:#2b1d12;border:3px solid #f0a640;border-radius:16px;padding:16px;text-align:center}
+.bres h3{margin:0 0 8px;font-size:26px}
+.bres .btns{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.btitle{position:absolute;top:calc(12px + env(safe-area-inset-top));left:0;right:0;text-align:center;font-weight:800;font-size:16px;z-index:3}
+/* modal & toast */
+#modal{position:fixed;inset:0;z-index:100;display:none;background:rgba(0,0,0,.6);align-items:center;justify-content:center}
+#modal.on{display:flex}
+.mbox{width:min(90vw,400px);max-height:86vh;overflow:auto;background:#2b1d12;border:2.5px solid #f0a640;border-radius:16px;padding:16px}
+.mbox h3{margin:0 0 10px;font-size:18px}
+.mbox p{margin:6px 0;line-height:1.6;font-size:14px}
+.mbtns{display:flex;gap:8px;justify-content:flex-end;margin-top:14px;flex-wrap:wrap}
+.mbox input[type=text]{width:100%;font:inherit;font-size:16px;padding:9px;border-radius:10px;border:2px solid #f0a640;background:#1a110a;color:#fff}
+.mbox input[type=range]{width:100%}
+.arow{display:flex;align-items:center;gap:6px;padding:7px 0;border-bottom:1px solid #ffffff15;font-size:13px}
+.arow .grow{flex:1}
+.arow .st{font-size:11px;color:#9fe39a}.arow .st.no{color:#a99}
+.fbtn{border-radius:8px;padding:5px 10px;font-weight:800;background:#ffffff1a;border:1.5px solid #fff6;font-size:12px;cursor:pointer}
+.xbtn{border-radius:8px;padding:5px 8px;background:none;border:1.5px solid #ff8a8a88;color:#ffaaaa;font-size:12px}
+#toast{position:fixed;left:50%;bottom:110px;transform:translateX(-50%);z-index:200;display:flex;flex-direction:column;align-items:center;gap:6px;pointer-events:none;width:90%;max-width:400px}
+#toast .t{background:rgba(20,12,6,.92);border:1.5px solid #f0a640;border-radius:12px;padding:7px 14px;font-size:13px;font-weight:800;text-align:center;animation:tin .25s}
+@keyframes tin{from{opacity:0;transform:translateY(8px)}}
+.note{font-size:11px;color:#cbb;line-height:1.5}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="modal"></div>
+<div id="toast"></div>
+<script>
+'use strict';
+/* ========== データ定義 ========== */
+const SLOTS=['helmet','chest','armor','boots'];
+const SLOT_JP={helmet:'ヘルメット',chest:'チェスト',armor:'アーマー',boots:'ブーツ'};
+const SLOT_STAT={helmet:'hp',chest:'def',armor:'atk',boots:'spd'};
+const STAT_JP={atk:'攻撃',hp:'体力',def:'防御',spd:'素早さ'};
+const STAT_ORDER=['atk','hp','def','spd'];
+const BASES={leather:{n:'レザー',tier:1,mat:'scrap',col:'#a8662e',dk:'#5c3415'},hard:{n:'ハードレザー',tier:2,mat:'tanned',col:'#6e4220',dk:'#2e1a0a'}};
+const RAR=['C','UC','R','SR'];
+const MATS={
+  potion:{n:'スタミナ剤',ic:'🧪',r:0,d:'スタミナを30回復。最大値を超えて使えるのは1回だけ。'},
+  scrap:{n:'かわのきれはし',ic:'🟫',r:0,d:'クラフトの素材。3個でレザー装備を作れる。'},
+  tanned:{n:'なめしがわ',ic:'🟤',r:1,d:'クラフトの素材。5個でハードレザー装備を作れる。'},
+  upLeather:{n:'革の強化そざい',ic:'🔶',r:1,d:'レザー・ハードレザー装備を1段階強化する。'}
+};
+const SPECIES={
+  purun:{n:'ぷるん',base:{atk:5,hp:8,def:4,spd:6},rec:0},
+  ratol:{n:'ラートル',base:{atk:5,hp:6,def:3,spd:9},rec:.30},
+  powa:{n:'ポワムッシュ',base:{atk:4,hp:10,def:6,spd:4},rec:.20},
+  grimlin:{n:'グリムリン',base:{atk:7,hp:7,def:4,spd:6},rec:.08}
+};
+const WORLD_NAME='森のすみか';
+const STAGES=[
+  {id:'1-1',rec:1,exp:25,enemy:'ratol',x:30,y:84},
+  {id:'1-2',rec:3,exp:30,enemy:'powa',x:68,y:68},
+  {id:'1-3',rec:5,exp:35,enemy:'ratol',x:32,y:51},
+  {id:'1-4',rec:8,exp:40,enemy:'powa',x:68,y:34},
+  {id:'1-5',rec:10,exp:45,enemy:'grimlin',x:42,y:15}
+];
+STAGES.forEach((s,i)=>s.gold=Math.round(100*Math.pow(1.1,i)));
+const WPTS=[{n:'丘のお立ち台',x:50,y:85},{n:'森の入り口',x:27,y:70},{n:'村の田畑',x:70,y:57},{n:'滝横の灯台',x:28,y:42},{n:'洞窟の入り口',x:71,y:27},{n:'魔王城',x:50,y:9}];
+const COST=5;
+const ASSETS=[
+  ['home_bg','ホーム背景（酒場）','image'],['battle_bg','戦闘背景（森）','image'],['world_map','ワールドマップ','image'],['stage_ring','ステージの石の輪','image'],
+  ['mon_purun','ぷるん','image'],['mon_grimlin','グリムリン','image'],['mon_powa','ポワムッシュ','image'],['mon_ratol','ラートル','image'],
+  ['eq_leather_helmet','レザーヘルメット','image'],['eq_leather_chest','レザーチェスト','image'],['eq_leather_armor','レザーアーマー','image'],['eq_leather_boots','レザーブーツ','image'],
+  ['bgm_home','ホームBGM（酒場の休日）','audio'],['bgm_battle','戦闘BGM','audio'],['se_switch','切り替え効果音','audio']
+];
+
+/* ========== ユーティリティ ========== */
+const $=s=>document.querySelector(s);
+const clamp=(a,b,x)=>Math.max(a,Math.min(b,x));
+const ri=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+const uid=()=>Math.random().toString(36).slice(2,10);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt=n=>Math.floor(n).toLocaleString('ja-JP');
+const f1=n=>(Math.round(n*10)/10).toFixed(1);
+const A={};
+function toast(t){const d=document.createElement('div');d.className='t';d.textContent=t;const box=$('#toast');box.appendChild(d);while(box.children.length>3)box.firstChild.remove();setTimeout(()=>d.remove(),2300)}
+
+/* ========== セーブ ========== */
+const KEY='monstertale_save_v1';
+function mkEq(base,slot,rar){return{uid:uid(),base,slot,rar:rar||0,plus:0}}
+function newMon(id){return{id,lv:1,exp:0,eq:{helmet:null,chest:null,armor:null,boots:null}}}
+function newState(){
+  const eq=SLOTS.map(s=>mkEq('leather',s,0));
+  const m=newMon('purun');SLOTS.forEach((s,i)=>m.eq[s]=eq[i].uid);
+  return{name:'',gold:0,uLv:1,uExp:0,stamina:50,overUsed:false,mons:[m],active:'purun',equips:eq,
+    items:{potion:1,scrap:0,tanned:0,upLeather:0},cleared:0,sel:0,seen:{purun:true},claimed:{},
+    vol:{bgm:.5,se:.7},spd:1,last:Date.now(),rem:{g:0,e:0,s:0}};
+}
+function load(){try{const t=localStorage.getItem(KEY);if(t){const o=JSON.parse(t),d=newState();return Object.assign(d,o,{items:Object.assign(d.items,o.items||{}),vol:Object.assign(d.vol,o.vol||{}),rem:Object.assign(d.rem,o.rem||{})})}}catch(e){}return null}
+let LS_OK=true;try{localStorage.setItem('__mt','1');localStorage.removeItem('__mt')}catch(e){LS_OK=false}
+function save(){S.savedAt=Date.now();try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}CL.dirty=true}
+/* クラウド保存（claude.ai にサインインしている人ごとの保存） */
+const CL={ref:null,ok:false,dirty:false,busy:false,last:'',status:'確認中…'};
+async function cloudInit(){
+  try{
+    if(!window.claude||typeof window.claude.use!=='function'){CL.status='使えません（このページの外で開いています）';return}
+    const [db,user]=await Promise.all([window.claude.use('db'),window.claude.use('user')]);
+    if(!db||!user){CL.status='使えません（claude.ai にサインインが必要です）';return}
+    const id=await user.id();if(!id){CL.status='使えません（アカウントを確認できません）';return}
+    CL.ref=db.doc('data/users/'+id+'/save');
+    const snap=await Promise.race([CL.ref.get(),new Promise((_,j)=>setTimeout(()=>j({code:'timeout'}),10000))]);
+    CL.ok=true;CL.status='有効';
+    const d=snap.exists&&snap.data();
+    if(d&&d.json){const c=JSON.parse(d.json);
+      if((c.savedAt||0)>(S.savedAt||0)){applySave(c);toast('クラウドのセーブを読み込みました')}else{CL.dirty=true;cloudSave()}}
+    else{CL.dirty=true;cloudSave()}
+  }catch(e){CL.ok=false;CL.status=e&&e.code==='timeout'?'つながりません（あとで再試行）':'使えません';}
+}
+async function cloudSave(){
+  if(!CL.ok||!CL.ref||CL.busy||!CL.dirty)return;
+  const json=JSON.stringify(S);if(json===CL.last){CL.dirty=false;return}
+  CL.busy=true;CL.dirty=false;
+  try{await CL.ref.set({json,savedAt:S.savedAt||Date.now()});CL.last=json;CL.status='有効（最終保存 '+new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'})+'）'}
+  catch(e){if(e&&e.code==='invalid_argument'){CL.ok=false;CL.status='このアカウントでは保存できません（共有の権限が「閲覧のみ」）'}else CL.dirty=true}
+  finally{CL.busy=false}
+}
+function applySave(o){const d=newState();S=Object.assign(d,o,{items:Object.assign(d.items,o.items||{}),vol:Object.assign(d.vol,o.vol||{}),rem:Object.assign(d.rem,o.rem||{})});U.eqMon=S.active;tick();render();try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function exportCode(){return 'MT1.'+btoa(unescape(encodeURIComponent(JSON.stringify(S))))}
+function importCode(t){t=(t||'').trim();if(!t.startsWith('MT1.'))throw 0;const o=JSON.parse(decodeURIComponent(escape(atob(t.slice(4)))));if(!o||!Array.isArray(o.mons))throw 0;o.savedAt=Date.now();return o}
+let S=load()||newState();
+
+/* ========== ゲームロジック ========== */
+const mon=id=>S.mons.find(m=>m.id===id);
+const activeMon=()=>mon(S.active)||S.mons[0];
+const needExp=lv=>Math.round(500*Math.pow(1.1,lv-1));
+const uNeed=lv=>Math.round(30*Math.pow(1.25,lv-1));
+const stamMax=()=>Math.round(50*Math.pow(1.1,S.uLv-1));
+const getEq=u=>u?S.equips.find(e=>e.uid===u):null;
+const eqBonus=e=>BASES[e.base].tier*(1+e.rar)+e.plus;
+const eqName=e=>BASES[e.base].n+SLOT_JP[e.slot];
+const isEquipped=u=>S.mons.some(m=>SLOTS.some(s=>m.eq[s]===u));
+const freeEquips=()=>S.equips.filter(e=>!isEquipped(e.uid));
+function stats(m){
+  const b=SPECIES[m.id].base,f=Math.pow(1.05,m.lv-1),base={},eq={atk:0,hp:0,def:0,spd:0},total={};
+  for(const k of STAT_ORDER)base[k]=b[k]*f;
+  for(const s of SLOTS){const e=getEq(m.eq[s]);if(e)eq[SLOT_STAT[s]]+=eqBonus(e)}
+  for(const k of STAT_ORDER)total[k]=base[k]+eq[k];
+  return{base,eq,total};
+}
+const power=m=>{const t=stats(m).total;return t.atk+t.hp+t.def+t.spd};
+const recPower=i=>23*Math.pow(1.05,STAGES[i].rec-1)+4;
+function winRate(i,m){if(i===0)return 1;return clamp(.08,.97,.55+(power(m)/recPower(i)-1)*2.2)}
+function gainMonExp(m,x){m.exp+=x;let up=false;while(m.exp>=needExp(m.lv)){m.exp-=needExp(m.lv);m.lv++;up=true}
+  if(up){toast(`${SPECIES[m.id].n} が Lv.${m.lv} になった！`);se('lv')}}
+function gainUserExp(x){S.uExp+=x;while(S.uExp>=uNeed(S.uLv)){S.uExp-=uNeed(S.uLv);const pm=stamMax();S.uLv++;S.stamina+=pm;S.overUsed=false;toast(`ユーザーLv.${S.uLv}！ スタミナ +${pm}`);se('lv')}}
+function usePotion(){
+  if(S.items.potion<=0){toast('スタミナ剤を持っていません');return false}
+  const max=stamMax();
+  if(S.stamina>=max&&S.overUsed){toast('これ以上スタミナを増やせません');return false}
+  let ns=S.stamina+30;
+  if(ns>max){if(S.overUsed)ns=max;else S.overUsed=true}
+  S.items.potion--;S.stamina=ns;se('coin');toast(`スタミナ剤を使った（${S.stamina}/${max}）`);updateHUD();save();return true;
+}
+function ensureStamina(cb){
+  if(S.stamina>=COST)return cb();
+  if(S.items.potion>0){confirmModal('スタミナが足りません',`スタミナ剤を使いますか？<br><small>所持：${S.items.potion}個</small>`,()=>{if(usePotion()&&S.stamina>=COST)cb()});}
+  else toast('スタミナが足りません（ストアでスタミナ剤を買えます）');
+}
+function addEquip(e){if(freeEquips().length>=50){toast('装備欄がいっぱいです');return false}S.equips.push(e);return true}
+function resolveAdventure(i,win){
+  const st=STAGES[i],m=activeMon(),r={win,gold:0,exp:0,drops:{},recruit:null,unlock:null};
+  S.seen[st.enemy]=true;gainUserExp(10);
+  if(win){
+    r.gold=st.gold;r.exp=st.exp;S.gold+=r.gold;gainMonExp(m,r.exp);
+    if(Math.random()<.45){r.drops.scrap=(r.drops.scrap||0)+1}
+    if(i>=3&&Math.random()<.3){r.drops.tanned=(r.drops.tanned||0)+1}
+    if(S.cleared===i){S.cleared++;r.drops.scrap=(r.drops.scrap||0)+2;if(i+1<STAGES.length){r.unlock=STAGES[i+1].id;S.sel=i+1}}
+    for(const k in r.drops)S.items[k]+=r.drops[k];
+    if(!mon(st.enemy)&&Math.random()<SPECIES[st.enemy].rec){S.mons.push(newMon(st.enemy));r.recruit=st.enemy}
+  }
+  return r;
+}
+function rewardText(r){
+  const a=[];if(r.gold)a.push(`💰 +${fmt(r.gold)}G`);if(r.exp)a.push(`✨ +${r.exp}EXP`);
+  for(const k in r.drops)a.push(`${MATS[k].ic} ${MATS[k].n} ×${r.drops[k]}`);a.push('ユーザーEXP +10');return a;
+}
+function tick(){
+  const now=Date.now();let dt=(now-S.last)/1000;S.last=now;dt=clamp(0,12*3600,dt);
+  S.rem.g+=dt;const g=Math.floor(S.rem.g/10);S.rem.g-=g*10;S.gold+=g;
+  S.rem.e+=dt;const e=Math.floor(S.rem.e/18);S.rem.e-=e*18;if(e)gainMonExp(activeMon(),e);
+  if(S.stamina<stamMax()){S.rem.s+=dt;const s=Math.floor(S.rem.s/180);S.rem.s-=s*180;S.stamina=Math.min(stamMax(),S.stamina+s)}else S.rem.s=0;
+  return{g,e,dt};
+}
+
+/* ========== ミッション ========== */
+function missions(){
+  const stage=STAGES.map((s,i)=>({k:'st'+i,t:`ステージ ${s.id} をクリア`,done:S.cleared>i,rw:'🧪 スタミナ剤 ×2',give:()=>S.items.potion+=2}));
+  const user=[2,3,4,5,7,10].map(l=>({k:'u'+l,t:`ユーザーLv.${l} になる`,done:S.uLv>=l,rw:'⚡ スタミナ +20',give:()=>S.stamina+=20}));
+  const chara={};for(const m of S.mons)chara[m.id]=[[2,1],[3,2],[5,3],[10,5]].map(([l,n])=>({k:`c_${m.id}_${l}`,t:`${SPECIES[m.id].n} を Lv.${l} にする`,done:m.lv>=l,rw:`🟫 かわのきれはし ×${n}`,give:()=>S.items.scrap+=n}));
+  return{stage,user,chara};
+}
+function claimable(){const M=missions();return [...M.stage,...M.user,...Object.values(M.chara).flat()].filter(x=>x.done&&!S.claimed[x.k]).length}
+
+/* ========== 素材（IndexedDB） ========== */
+function idb(){return new Promise((res,rej)=>{try{const r=indexedDB.open('monstertale_assets',1);r.onupgradeneeded=()=>r.result.createObjectStore('a');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}catch(e){rej(e)}})}
+async function loadAssets(){try{const db=await idb();await Promise.all(ASSETS.map(([k])=>new Promise(r=>{const q=db.transaction('a').objectStore('a').get(k);q.onsuccess=()=>{if(q.result)A[k]=URL.createObjectURL(q.result);r()};q.onerror=()=>r()})))}catch(e){}}
+async function putAsset(k,blob){try{const db=await idb();await new Promise((r,j)=>{const tx=db.transaction('a','readwrite');tx.objectStore('a').put(blob,k);tx.oncomplete=r;tx.onerror=()=>j(tx.error)})}catch(e){toast('このブラウザでは素材を保存できませんでした（今回だけ反映）')}if(A[k])URL.revokeObjectURL(A[k]);A[k]=blob?URL.createObjectURL(blob):undefined}
+async function delAsset(k){try{const db=await idb();await new Promise(r=>{const tx=db.transaction('a','readwrite');tx.objectStore('a').delete(k);tx.oncomplete=r;tx.onerror=r})}catch(e){}if(A[k])URL.revokeObjectURL(A[k]);delete A[k]}
+
+/* ========== サウンド ========== */
+const AU={ctx:null,bgm:null,seG:null,timer:null,el:null,mode:null,gen:0};
+function initAudio(){if(AU.ctx)return;try{const C=window.AudioContext||window.webkitAudioContext;AU.ctx=new C();AU.bgm=AU.ctx.createGain();AU.seG=AU.ctx.createGain();AU.bgm.connect(AU.ctx.destination);AU.seG.connect(AU.ctx.destination);applyVol();playSong(U.scr==='battle'?'battle':'home')}catch(e){}}
+function applyVol(){if(AU.bgm)AU.bgm.gain.value=S.vol.bgm*.3;if(AU.seG)AU.seG.gain.value=S.vol.se*.5;if(AU.el)AU.el.volume=S.vol.bgm}
+const mtof=m=>440*Math.pow(2,(m-69)/12);
+function tone(t,m,d,type,g,dest,toM){const c=AU.ctx,o=c.createOscillator(),v=c.createGain();o.type=type;o.frequency.setValueAtTime(mtof(m),t);if(toM)o.frequency.exponentialRampToValueAtTime(mtof(toM),t+d);v.gain.setValueAtTime(0,t);v.gain.linearRampToValueAtTime(g,t+.01);v.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(v);v.connect(dest);o.start(t);o.stop(t+d+.05)}
+const SONGS={
+  home:{step:.3,bar:6,lt:'triangle',bt:'sine',chords:[50,50,43,45,50,43,45,50],bpat:[0,null,12,null,16,null],
+    lead:[74,78,81,78,76,74,76,78,79,81,0,78,79,83,79,78,76,74,76,73,76,79,78,76,74,78,81,86,85,83,81,79,78,79,81,83,81,0,78,76,73,76,74,0,0,74,0,0]},
+  battle:{step:.2,bar:8,lt:'square',bt:'sawtooth',chords:[45,41,43,40],bpat:[0,12,0,12,0,12,0,12],
+    lead:[69,72,76,72,81,76,72,76,77,72,69,72,77,81,77,72,79,74,71,74,79,83,79,74,76,80,83,80,76,0,76,0]}
+};
+function stopBgm(){clearInterval(AU.timer);AU.timer=null;if(AU.el){AU.el.pause();AU.el=null}AU.mode=null;if(AU.bgm&&AU.ctx){AU.bgm.gain.cancelScheduledValues(AU.ctx.currentTime);applyVol()}}
+function playSong(name){
+  if(!AU.ctx)return;if(AU.mode===name)return;stopBgm();AU.mode=name;
+  const url=A[name==='home'?'bgm_home':'bgm_battle'];
+  if(url){AU.el=new Audio(url);AU.el.loop=true;AU.el.volume=S.vol.bgm;AU.el.play().catch(()=>{});return}
+  const sg=SONGS[name];let i=0,t=AU.ctx.currentTime+.1;
+  AU.timer=setInterval(()=>{while(t<AU.ctx.currentTime+.35){const n=sg.lead[i%sg.lead.length];if(n)tone(t,n,sg.step*1.7,sg.lt,name==='battle'?.12:.22,AU.bgm);
+    const bi=i%sg.bar,bar=Math.floor(i/sg.bar)%sg.chords.length,bp=sg.bpat[bi];if(bp!=null)tone(t,sg.chords[bar]+bp,sg.step*1.3,sg.bt,name==='battle'?.1:.2,AU.bgm);t+=sg.step;i++}},80);
+}
+function fadeOutBgm(ms){if(!AU.ctx)return;const t=AU.ctx.currentTime;AU.bgm.gain.setValueAtTime(AU.bgm.gain.value,t);AU.bgm.gain.linearRampToValueAtTime(.0001,t+ms/1000);
+  if(AU.el){const el=AU.el,v0=el.volume,st=Date.now();const iv=setInterval(()=>{const p=(Date.now()-st)/ms;if(p>=1){clearInterval(iv);el.pause()}else el.volume=v0*(1-p)},50)}
+  setTimeout(()=>{if(AU.mode!=='battle')stopBgm()},ms)}
+function toBattleAudio(){if(!AU.ctx)return;const g=++AU.gen;fadeOutBgm(700);
+  setTimeout(()=>{if(g!==AU.gen)return;stopBgm();se('switch')},1300);
+  setTimeout(()=>{if(g!==AU.gen||U.scr!=='battle')return;playSong('battle')},4200)}
+function toHomeAudio(){AU.gen++;if(AU.mode!=='home'){stopBgm();playSong('home')}}
+function se(n){
+  if(!AU.ctx)return;const t=AU.ctx.currentTime+.01,D=AU.seG;
+  if(n==='click')tone(t,84,.06,'square',.06,D);
+  else if(n==='atk')tone(t,79,.16,'sawtooth',.18,D,55);
+  else if(n==='hit')tone(t,45,.22,'square',.22,D,30);
+  else if(n==='coin'){tone(t,88,.08,'square',.1,D);tone(t+.08,93,.18,'square',.1,D)}
+  else if(n==='lv')[72,76,79,84].forEach((m,i)=>tone(t+i*.08,m,.25,'triangle',.25,D));
+  else if(n==='win')[72,76,79,84,79,84].forEach((m,i)=>tone(t+i*.12,m,i===5?.8:.2,'square',.12,D));
+  else if(n==='lose')[67,63,60].forEach((m,i)=>tone(t+i*.22,m,.4,'triangle',.25,D));
+  else if(n==='switch'){if(A.se_switch){const a=new Audio(A.se_switch);a.volume=S.vol.se;a.play().catch(()=>{});return}
+    [60,64,67,72,76].forEach((m,i)=>tone(t+i*.13,m,.3,'square',.11,D));[72,76,79].forEach(m=>tone(t+.75,m,1.8,'square',.08,D))}
+}
+
+/* ========== 絵（仮イラスト） ========== */
+const SVGM={
+purun:`<svg viewBox="0 0 120 110"><ellipse cx="60" cy="102" rx="40" ry="6" fill="rgba(0,0,0,.3)"/><path d="M18 92 C10 60 30 30 60 26 C90 30 110 60 102 92 C98 100 22 100 18 92Z" fill="#6fcf4f" stroke="#2d6a1f" stroke-width="3"/><path d="M60 27 C56 14 64 8 76 6 C73 16 68 24 60 27Z" fill="#3fa34a" stroke="#2d6a1f" stroke-width="2"/><ellipse cx="40" cy="46" rx="10" ry="6" fill="#fff" opacity=".5"/><ellipse cx="46" cy="64" rx="5" ry="7" fill="#1d2b18"/><ellipse cx="74" cy="64" rx="5" ry="7" fill="#1d2b18"/><circle cx="48" cy="61" r="1.8" fill="#fff"/><circle cx="76" cy="61" r="1.8" fill="#fff"/><path d="M54 76 Q60 81 66 76" stroke="#1d2b18" stroke-width="2.5" fill="none" stroke-linecap="round"/><ellipse cx="35" cy="74" rx="6" ry="3" fill="#f59b9b" opacity=".6"/><ellipse cx="85" cy="74" rx="6" ry="3" fill="#f59b9b" opacity=".6"/></svg>`,
+grimlin:`<svg viewBox="0 0 120 110"><ellipse cx="60" cy="102" rx="34" ry="6" fill="rgba(0,0,0,.3)"/><path d="M38 34 L26 8 L48 28Z M82 34 L94 8 L72 28Z" fill="#e8d9b0" stroke="#5a4a2a" stroke-width="2"/><path d="M40 70 L36 98 L50 98 L54 84 L66 84 L70 98 L84 98 L80 70Z" fill="#6a3d8f" stroke="#2e1a40" stroke-width="3"/><path d="M34 48 L12 40 L30 58Z M86 48 L108 40 L90 58Z" fill="#8b55b8" stroke="#2e1a40" stroke-width="3"/><circle cx="60" cy="50" r="28" fill="#8b55b8" stroke="#2e1a40" stroke-width="3"/><path d="M42 45 L56 50 L42 55Z" fill="#ffe14d"/><path d="M78 45 L64 50 L78 55Z" fill="#ffe14d"/><path d="M47 64 Q60 73 73 64" stroke="#2e1a40" stroke-width="3" fill="none"/><path d="M52 67 L54 71 L56 68 M64 68 L66 71 L68 67" stroke="#fff" stroke-width="2" fill="none"/></svg>`,
+powa:`<svg viewBox="0 0 120 110"><ellipse cx="60" cy="102" rx="34" ry="6" fill="rgba(0,0,0,.3)"/><path d="M40 60 L36 96 Q60 104 84 96 L80 60Z" fill="#f4e6c8" stroke="#6b5530" stroke-width="3"/><path d="M12 62 C12 22 108 22 108 62 C90 70 30 70 12 62Z" fill="#e0533d" stroke="#6b2418" stroke-width="3"/><circle cx="40" cy="44" r="7" fill="#fff"/><circle cx="66" cy="35" r="6" fill="#fff"/><circle cx="88" cy="52" r="5" fill="#fff"/><circle cx="50" cy="80" r="3.5" fill="#3a2a1a"/><circle cx="70" cy="80" r="3.5" fill="#3a2a1a"/><path d="M55 89 Q60 93 65 89" stroke="#3a2a1a" stroke-width="2" fill="none"/></svg>`,
+ratol:`<svg viewBox="0 0 120 110"><ellipse cx="60" cy="102" rx="38" ry="6" fill="rgba(0,0,0,.3)"/><path d="M94 88 C116 84 116 60 104 56" stroke="#c98a8a" stroke-width="4" fill="none" stroke-linecap="round"/><ellipse cx="62" cy="78" rx="36" ry="22" fill="#9aa0a8" stroke="#3e434a" stroke-width="3"/><circle cx="36" cy="30" r="14" fill="#9aa0a8" stroke="#3e434a" stroke-width="3"/><circle cx="36" cy="30" r="7" fill="#e7a8b0"/><circle cx="74" cy="30" r="14" fill="#9aa0a8" stroke="#3e434a" stroke-width="3"/><circle cx="74" cy="30" r="7" fill="#e7a8b0"/><ellipse cx="55" cy="56" rx="28" ry="24" fill="#aab0b8" stroke="#3e434a" stroke-width="3"/><circle cx="45" cy="54" r="4" fill="#1b1d20"/><circle cx="65" cy="54" r="4" fill="#1b1d20"/><circle cx="55" cy="66" r="4" fill="#e77f8c"/><path d="M40 66 L26 62 M40 70 L26 72 M70 66 L84 62 M70 70 L84 72" stroke="#3e434a" stroke-width="1.5"/></svg>`
+};
+function monArt(id,cls,extra){const c=`mon ${cls||''} ${extra||''}`;return A['mon_'+id]?`<img class="${c}" src="${A['mon_'+id]}" alt="">`:`<div class="${c}">${SVGM[id]}</div>`}
+function eqIcon(e){
+  const k=`eq_${e.base}_${e.slot}`;if(A[k])return`<img src="${A[k]}" alt="">`;
+  const b=BASES[e.base],P={helmet:'M8 25 Q8 8 20 8 Q32 8 32 25 L32 29 L8 29Z',chest:'M10 10 L16 7 Q20 11 24 7 L30 10 L33 18 L28 19 L28 33 L12 33 L12 19 L7 18Z',armor:'M9 9 L31 9 L33 20 L28 34 L12 34 L7 20Z',boots:'M12 6 L22 6 L22 26 L33 28 L33 34 L12 34Z'}[e.slot];
+  const L={helmet:'M8 23 L32 23',chest:'M20 12 L20 32',armor:'M10 17 L30 17 M12 25 L28 25',boots:'M12 12 L22 12'}[e.slot];
+  return`<svg viewBox="0 0 40 40"><path d="${P}" fill="${b.col}" stroke="${b.dk}" stroke-width="2" stroke-linejoin="round"/><path d="${L}" stroke="${b.dk}" stroke-width="2"/></svg>`;
+}
+const TAVERN=`<div class="tav"><div class="win"></div><div class="lamp"></div><div class="shelf">${['#7a2','#c33','#36c','#d92','#a5c','#3a8'].map((c,i)=>`<i class="bt" style="left:${8+i*15}%;height:${18+(i%3)*6}px;background:${c}"></i>`).join('')}</div><div class="floor"></div><div class="table"></div></div>`;
+const TREES=`<svg class="trees" viewBox="0 0 400 100" preserveAspectRatio="none">${Array.from({length:14},(_,i)=>{const x=i*30+(i%2)*8,h=55+(i*37%30);return`<path d="M${x} 100 L${x+18} ${100-h} L${x+36} 100Z" fill="${i%2?'#2f6a33':'#3b7d3c'}"/>`}).join('')}</svg>`;
+function worldSVG(){
+  const pts=WPTS.map(p=>[p.x*4,p.y*9]);
+  let d=`M200 880 L${pts[0][0]} ${pts[0][1]}`;for(let i=1;i<pts.length;i++){const a=pts[i-1],b=pts[i];d+=` Q${(a[0]+b[0])/2+(i%2?60:-60)} ${(a[1]+b[1])/2} ${b[0]} ${b[1]}`}
+  const trees=[];for(let i=0;i<46;i++){const x=(i*83)%400,y=120+((i*137)%700);trees.push(`<circle cx="${x}" cy="${y}" r="${10+(i%3)*4}" fill="${i%2?'#3f7f3a':'#356f31'}"/>`)}
+  return`<svg viewBox="0 0 400 900" preserveAspectRatio="none"><defs><linearGradient id="wg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3b2d4a"/><stop offset=".18" stop-color="#6d6a5a"/><stop offset=".3" stop-color="#6fa356"/><stop offset="1" stop-color="#86c46a"/></linearGradient></defs>
+  <rect width="400" height="900" fill="url(#wg)"/><path d="M0 230 L60 150 L110 220 L170 130 L240 230 L300 160 L360 220 L400 180 L400 260 L0 260Z" fill="#5a5466"/>
+  <path d="M400 330 C330 360 360 430 300 470 C240 510 280 600 210 640 C150 680 160 760 90 800 L60 900 L0 900 L0 860 C60 820 60 760 120 720" stroke="#5ab3e6" stroke-width="16" fill="none" opacity=".9"/>
+  <path d="M120 360 L120 420" stroke="#bfe6ff" stroke-width="10"/>
+  ${trees.join('')}<path d="${d}" stroke="#d9b98a" stroke-width="12" fill="none" stroke-linecap="round" stroke-dasharray="2 0"/>
+  <path d="M${pts[2][0]-50} ${pts[2][1]+30} h100 v40 h-100Z" fill="#c9b062" opacity=".7"/><path d="M${pts[2][0]-50} ${pts[2][1]+40} h100 M${pts[2][0]-50} ${pts[2][1]+52} h100 M${pts[2][0]-50} ${pts[2][1]+64} h100" stroke="#8c7a3a"/>
+  <rect x="${pts[3][0]+30}" y="${pts[3][1]-50}" width="12" height="40" fill="#eee"/><path d="M${pts[3][0]+27} ${pts[3][1]-50} l9 -12 l9 12Z" fill="#c33"/>
+  <path d="M${pts[4][0]-36} ${pts[4][1]-6} Q${pts[4][0]} ${pts[4][1]-60} ${pts[4][0]+36} ${pts[4][1]-6}Z" fill="#2a2430"/>
+  <g fill="#2a1830"><rect x="160" y="30" width="80" height="60"/><rect x="150" y="10" width="20" height="80"/><rect x="230" y="10" width="20" height="80"/><rect x="190" y="0" width="20" height="40"/></g>
+  <g fill="#e8e2d6" stroke="#8a7f6a" stroke-width="2"><rect x="165" y="840" width="70" height="50"/><rect x="155" y="820" width="20" height="70"/><rect x="225" y="820" width="20" height="70"/></g><path d="M155 820 l10 -16 l10 16Z M225 820 l10 -16 l10 16Z" fill="#3a6fd0"/>
+  </svg>`;
+}
+
+/* ========== UI 状態 ========== */
+const U={scr:'home',sub:'items',forge:'synth',mtab:'stage',cfilter:'',copen:'purun',dis:new Set(),eqMon:S.active,page:0};
+let B=null,battleGen=0;
+
+function bgStyle(k){return A[k]?`background-image:url('${A[k]}')`:''}
+function hudTop(){return`<div class="hrow"><div class="frame gold">💰 <b id="gold">${fmt(S.gold)}</b></div>
+<div class="stam"><div class="sbar"><i id="stamBar"></i></div><div class="stxt" id="stamTxt"></div></div>
+<div class="frame uname" data-act="rename">${esc(S.name||'？？？')}<small>Lv.<span id="uLv">${S.uLv}</span></small></div></div>`}
+function miniHud(){const m=activeMon();return`<span class="pill">⚡<span id="hStam"></span></span><span class="pill">${esc(SPECIES[m.id].n)} Lv.<span id="hCLv">${m.lv}</span></span><span class="pill">ユーザーLv.<span id="hULv">${S.uLv}</span></span>`}
+function updateHUD(){
+  const max=stamMax(),m=activeMon(),set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v};
+  set('gold',fmt(S.gold));set('uLv',S.uLv);set('hULv',S.uLv);set('hCLv',m.lv);set('monLv','Lv.'+m.lv);set('hStam',`${S.stamina}/${max}`);
+  const sb=document.getElementById('stamBar');if(sb)sb.style.width=Math.min(100,S.stamina/max*100)+'%';
+  const st=document.getElementById('stamTxt');if(st){st.textContent=`${S.stamina}/${max}`;st.classList.toggle('over',S.stamina>max)}
+  const ex=document.getElementById('monExp');if(ex)ex.style.width=(m.exp/needExp(m.lv)*100)+'%';
+  const dot=document.getElementById('mdot');if(dot)dot.style.display=claimable()?'block':'none';
+}
+
+/* ========== 画面 ========== */
+function rHome(){
+  const m=activeMon(),st=STAGES[S.sel];
+  return`<div class="screen" style="${bgStyle('home_bg')}">${A.home_bg?'':TAVERN}
+  <div class="hud">${hudTop()}</div><button class="gear" data-act="settings" aria-label="設定">⚙️</button>
+  <div class="stagebox"><span class="w">${WORLD_NAME}</span><b>${st.id}</b></div>
+  <div class="side"><button class="sidebtn" data-act="go" data-v="mission">📜<span>ミッション</span><i class="dot" id="mdot"></i></button><button class="sidebtn" data-act="go" data-v="store">🛒<span>ストア</span></button></div>
+  <div class="stage-floor"><div class="monwrap" id="homeMon" data-act="monInfo">${monArt(m.id,'big')}</div>
+  <div class="mname">${esc(SPECIES[m.id].n)} <span id="monLv">Lv.${m.lv}</span></div><div class="expbar"><i id="monExp"></i></div></div>
+  <div class="bottom"><button class="bbtn" data-act="go" data-v="ruck">🎒<span>リュック</span></button><button class="bbtn adv" id="advBtn">⚔️<span>冒険に出す</span></button><button class="bbtn" data-act="go" data-v="map">🗺️<span>マップ</span></button></div></div>`;
+}
+const NAV=[['home','🏠'],['items','📦'],['equip','🛡️'],['forge','🔨'],['dex','📖'],['mons','🐾']];
+const SUB_T={items:'アイテムボックス',equip:'装備欄',forge:'鍛冶盤',dex:'モンスター図鑑',mons:'モンスター'};
+function rRuck(){
+  const body={items:rItems,equip:rEquip,forge:rForge,dex:rDex,mons:rMons}[U.sub]();
+  return`<div class="screen panel-screen"><div class="topbar"><h2>${SUB_T[U.sub]}</h2><span class="frame gold">💰 ${fmt(S.gold)}</span></div>
+  ${body}<div class="nav">${NAV.map(([k,ic])=>`<button class="${U.sub===k?'on':''}" data-act="${k==='home'?'go':'sub'}" data-v="${k}" aria-label="${k}">${ic}</button>`).join('')}</div></div>`;
+}
+function rItems(){
+  const list=Object.keys(MATS).filter(k=>S.items[k]>0);
+  let html='<div class="pages" id="pages">';
+  for(let p=0;p<5;p++){html+='<div class="page"><div class="grid">';for(let c=0;c<50;c++){const k=list[p*50+c];
+    html+=k?`<div class="cell r${MATS[k].r}" data-act="matInfo" data-k="${k}">${MATS[k].ic}<span class="cnt">${S.items[k]}</span></div>`:'<div class="cell emp"></div>'}
+    html+='</div></div>'}
+  return html+`</div><div class="dots" id="dots">${[0,1,2,3,4].map(i=>`<i class="${i===U.page?'on':''}"></i>`).join('')}</div>`;
+}
+function eqCell(e,from,act){const sel=act==='disTog'&&U.dis.has(e.uid);
+  return`<div class="cell r${e.rar}${sel?' sel':''}" ${act?'':`data-drag="${e.uid}" data-from="${from}"`} data-act="${act||'eqInfo'}" data-uid="${e.uid}">${eqIcon(e)}<span class="rar">${RAR[e.rar]}</span>${e.plus?`<span class="plus">+${e.plus}</span>`:''}</div>`}
+function rEquip(){
+  if(!mon(U.eqMon))U.eqMon=S.active;
+  const m=mon(U.eqMon),s=stats(m),free=freeEquips();
+  const slot=sl=>{const e=getEq(m.eq[sl]);return`<div class="slot" data-drop="slot" data-slot="${sl}"><div class="lab">${SLOT_JP[sl]}</div>${e?eqCell(e,'slot'):'<div class="cell emp" style="font-size:18px;color:#fff5">＋</div>'}</div>`};
+  return`<div class="content">${S.mons.length>1?`<div class="chips">${S.mons.map(x=>`<button class="chip ${x.id===m.id?'on':''}" data-act="eqMon" data-v="${x.id}">${esc(SPECIES[x.id].n)}</button>`).join('')}</div>`:''}
+  <div class="eqtop"><div class="slotcol">${slot('helmet')}${slot('chest')}</div><div style="text-align:center">${monArt(m.id,'eqmon')}<div style="font-weight:800;font-size:13px">${esc(SPECIES[m.id].n)} Lv.${m.lv}</div></div><div class="slotcol">${slot('armor')}${slot('boots')}</div></div>
+  <div class="stats">${STAT_ORDER.map(k=>`<div>${STAT_JP[k]}<b>${f1(s.total[k])}</b>${s.eq[k]?`<em>（装備+${s.eq[k]}）</em>`:''}</div>`).join('')}</div>
+  <div class="storage" data-drop="storage"><div class="sttl">装備欄 ${free.length}/50　<span class="note">ドラッグで付け外し・タップで詳細</span></div>
+  <div class="grid">${free.map(e=>eqCell(e,'box')).join('')}${'<div class="cell emp"></div>'.repeat(Math.max(0,50-free.length))}</div></div></div>`;
+}
+function rForge(){
+  const tabs=`<div class="tabs">${[['synth','合成'],['dis','分解'],['craft','クラフト']].map(([k,t])=>`<button class="tab ${U.forge===k?'on':''}" data-act="forgeTab" data-v="${k}">${t}</button>`).join('')}</div>`;
+  let body='';
+  if(U.forge==='synth'){
+    const g={};for(const e of freeEquips())if(e.rar<3){const k=`${e.base}|${e.slot}|${e.rar}`;(g[k]=g[k]||[]).push(e)}
+    const keys=Object.keys(g).sort();
+    body=keys.length?keys.map(k=>{const [b,sl,r]=k.split('|'),e=g[k][0],n=g[k].length;return`<div class="row"><div class="cell r${r}" style="width:52px">${eqIcon(e)}<span class="rar">${RAR[r]}</span></div><div class="grow"><b>${BASES[b].n}${SLOT_JP[sl]}</b><small>${RAR[r]} → ${RAR[+r+1]}　所持 ${n}/4</small></div><button class="btn" data-act="synth" data-v="${k}" ${n<4?'disabled':''}>合成</button></div>`}).join('')
+      :'<p class="note">同じ装備・同じレアリティを4つ集めると、ひとつ上のレアリティに合成できます。（装備中のものは使えません）</p>';
+    body='<p class="note" style="margin-top:0">同じ装備4つ → 上位レアリティ1つ</p>'+body;
+  }else if(U.forge==='dis'){
+    const free=freeEquips();
+    body=`<p class="note" style="margin-top:0">タップで選択（複数可）。レザー → かわのきれはし、ハードレザー → なめしがわ に分解します。</p>
+    <div class="grid">${free.map(e=>eqCell(e,'',"disTog")).join('')||'<span class="note">分解できる装備がありません</span>'}</div>
+    <div style="display:flex;gap:8px;margin-top:12px"><button class="btn ghost" data-act="disClear">選択解除</button><button class="btn red" style="flex:1" data-act="disDo" ${U.dis.size?'':'disabled'}>分解する（${U.dis.size}）</button></div>`;
+  }else{
+    const R=[['leather','scrap',3],['hard','tanned',5]];
+    body=R.map(([b,mat,n])=>`<div class="row"><div class="cell r0" style="width:52px">${eqIcon({base:b,slot:'armor'})}</div><div><b>${BASES[b].n}装備</b><small>${MATS[mat].ic} ${MATS[mat].n} ×${n}（所持 ${S.items[mat]}）</small><small>部位とレアリティはランダム</small></div><div class="grow"></div><button class="btn" data-act="craft" data-v="${b}" ${S.items[mat]<n?'disabled':''}>クラフト</button></div>`).join('');
+  }
+  return tabs+`<div class="content">${body}</div>`;
+}
+function rDex(){
+  return`<div class="content"><div class="moncards">${Object.keys(SPECIES).map(id=>{const seen=S.seen[id],own=!!mon(id);
+    return`<div class="mcard">${own?'<span class="badge">仲間</span>':''}${monArt(id,'',seen?'':'sil')}<div style="font-weight:800;margin-top:4px">${seen?esc(SPECIES[id].n):'？？？'}</div></div>`}).join('')}</div>
+    <p class="note">敵として出会うと図鑑に載り、倒すとたまに仲間になります。</p></div>`;
+}
+function rMons(){
+  return`<div class="content"><div class="moncards">${S.mons.map(m=>`<div class="mcard ${m.id===S.active?'on':''}" data-act="setActive" data-v="${m.id}">${m.id===S.active?'<span class="badge">ホーム</span>':''}${monArt(m.id)}<div style="font-weight:800;margin-top:4px">${esc(SPECIES[m.id].n)}</div><div style="font-size:12px;color:#ffe27a">Lv.${m.lv}</div></div>`).join('')}</div>
+  <p class="note">タップしたモンスターがホームに出ます。装備はモンスターごとに付けられます。</p></div>`;
+}
+function rStore(){
+  const IT=[['potion',50,'スタミナ +30（最大値を超えられるのは1回だけ）'],['upLeather',100,'レザー・ハードレザー装備を1段階強化']];
+  return`<div class="screen panel-screen"><div class="topbar"><button class="back" data-act="go" data-v="home">◀</button><h2>ストア</h2><span class="frame gold">💰 <span id="gold">${fmt(S.gold)}</span></span></div>
+  <div class="content">${IT.map(([k,p,d])=>`<div class="row"><div class="cell r${MATS[k].r}" style="width:52px">${MATS[k].ic}</div><div class="grow"><b>${MATS[k].n}</b><small>${d}</small><small>所持 ${S.items[k]}</small></div><button class="btn" data-act="buy" data-v="${k}" data-p="${p}" ${S.gold<p?'disabled':''}>${p}G</button></div>`).join('')}</div></div>`;
+}
+function mSort(list){const o=x=>S.claimed[x.k]?2:x.done?0:1;return list.map((x,i)=>[x,i]).sort((a,b)=>o(a[0])-o(b[0])||a[1]-b[1]).map(a=>a[0])}
+function mRow(x){const c=S.claimed[x.k];return`<div class="row"><div class="grow"><b style="font-size:14px">${esc(x.t)}</b><small>報酬：${x.rw}</small></div><button class="btn ${c?'ghost':''}" data-act="claim" data-v="${x.k}" ${c||!x.done?'disabled':''}>${c?'受取済':x.done?'受け取る':'未達成'}</button></div>`}
+function rMission(){
+  const M=missions();let body='';
+  if(U.mtab==='stage')body=mSort(M.stage).map(mRow).join('');
+  else if(U.mtab==='user')body=mSort(M.user).map(mRow).join('');
+  else{
+    const q=U.cfilter.trim();const list=S.mons.filter(m=>!q||SPECIES[m.id].n.includes(q));
+    body=`<input type="text" id="cfilter" placeholder="キャラ名を入力（例：ぷるん）" value="${esc(U.cfilter)}" style="width:100%;font:inherit;font-size:15px;padding:9px;border-radius:10px;border:2px solid #f0a640;background:#1a110a;color:#fff;margin-bottom:10px">`+
+    (list.length?list.map(m=>{const open=U.copen===m.id,ms=M.chara[m.id],n=ms.filter(x=>x.done&&!S.claimed[x.k]).length;
+      return`<div class="row" data-act="copen" data-v="${m.id}" style="cursor:pointer">${monArt(m.id,'mini','')}<div class="grow"><b>${esc(SPECIES[m.id].n)}</b><small>Lv.${m.lv}${n?`　受け取れる報酬 ${n}件`:''}</small></div><span>${open?'▲':'▼'}</span></div>${open?`<div style="padding-left:14px">${mSort(ms).map(mRow).join('')}</div>`:''}`}).join(''):'<p class="note">そのキャラは見つかりません</p>');
+  }
+  return`<div class="screen panel-screen"><div class="topbar"><button class="back" data-act="go" data-v="home">◀</button><h2>ミッション</h2><button class="btn" data-act="claimAll" ${claimable()?'':'disabled'}>一括受け取り${claimable()?`（${claimable()}）`:''}</button></div>
+  <div class="tabs">${[['stage','ステージ'],['chara','キャラ'],['user','ユーザー']].map(([k,t])=>`<button class="tab ${U.mtab===k?'on':''}" data-act="mtab" data-v="${k}">${t}</button>`).join('')}</div>
+  <div class="content">${body}</div></div>`;
+}
+function rMap(){
+  return`<div class="screen"><div class="wmap">${A.world_map?`<img src="${A.world_map}" style="object-fit:fill" alt="">`:worldSVG()}</div>
+  <div class="maphdr"><button class="back" style="background:rgba(0,0,0,.55)" data-act="go" data-v="home">◀</button>${miniHud()}</div>
+  ${WPTS.map((p,i)=>`<button class="wpt ${i?'lock':''}" style="left:${p.x}%;top:${p.y}%" data-act="wpt" data-v="${i}"><span class="ring"></span><span class="nm">${i+1} ${p.n}${i?' 🔒':''}</span></button>`).join('')}</div>`;
+}
+function rWorld(){
+  const st=STAGES[S.sel];
+  return`<div class="screen forest" style="${bgStyle('battle_bg')}">${A.battle_bg?'':TREES}
+  <div class="topbar" style="position:relative;z-index:2;border:none;flex-wrap:wrap"><button class="back" style="background:rgba(0,0,0,.5)" data-act="go" data-v="map">◀</button><h2 class="ts">${WORLD_NAME}</h2><button class="back" style="background:rgba(0,0,0,.5)" data-act="go" data-v="home">🏠</button><div style="width:100%;display:flex;gap:6px;margin-top:6px">${miniHud()}</div></div>
+  <div class="stagepath"><svg style="position:absolute;inset:0;width:100%;height:100%" viewBox="0 0 100 100" preserveAspectRatio="none"><polyline points="${STAGES.map(s=>s.x+','+s.y).join(' ')}" fill="none" stroke="#e8d3a6" stroke-width="2.4" stroke-dasharray="3 2" vector-effect="non-scaling-stroke" style="stroke-width:8px"/></svg>
+  ${STAGES.map((s,i)=>{const lock=i>S.cleared;return`<button class="sring ${lock?'lock':''} ${i===S.sel?'sel':''}" style="left:${s.x}%;top:${s.y}%" data-act="selStage" data-v="${i}">${A.stage_ring?`<img class="stone" src="${A.stage_ring}" alt="">`:`<span class="stone">${lock?'🔒':s.id}</span>`}<span class="lbl">${s.id}${S.cleared>i?' ★':''}</span></button>`}).join('')}</div>
+  <div class="spanel"><div class="grow" style="flex:1"><b style="font-size:18px">${st.id}</b>　<span style="font-size:12px">おすすめ Lv.${st.rec}</span><div class="note">⚡${COST}　報酬 ${fmt(st.gold)}G / ${st.exp}EXP</div></div><button class="btn red" style="font-size:17px;padding:10px 20px" data-act="battle">戦闘</button></div></div>`;
+}
+function rBattle(){
+  const m=activeMon(),st=STAGES[B.i];
+  return`<div class="screen battle" id="bscr" style="${bgStyle('battle_bg')};--spd:${S.spd||1}">${A.battle_bg?'':TREES}<div class="btitle ts">${WORLD_NAME} ${st.id}</div>${spdBtn()}
+  <div class="bfield" id="bfield">
+   <div class="hpbox ally">${esc(SPECIES[m.id].n)} Lv.${m.lv}<div class="hp"><i id="hpA" style="width:100%"></i></div></div>
+   <div class="hpbox enemy">${esc(SPECIES[B.en].n)} Lv.${st.rec}<div class="hp"><i id="hpE" style="width:100%"></i></div></div>
+   <div class="bmon ally" id="bAlly">${monArt(m.id)}</div>
+   <div class="bmon enemy" id="bEnemy" style="transform:scaleX(-1)"><div style="width:100%;height:100%">${monArt(B.en)}</div></div>
+  </div><div id="bres"></div></div>`;
+}
+function render(){
+  const f={home:rHome,ruck:rRuck,map:rMap,world:rWorld,battle:rBattle,store:rStore,mission:rMission}[U.scr];
+  $('#app').innerHTML=f();updateHUD();
+  const pg=document.getElementById('pages');
+  if(pg){pg.scrollLeft=U.page*pg.clientWidth;pg.addEventListener('scroll',()=>{const p=Math.round(pg.scrollLeft/pg.clientWidth);if(p!==U.page){U.page=p;document.querySelectorAll('#dots i').forEach((d,i)=>d.classList.toggle('on',i===p))}})}
+  const cf=document.getElementById('cfilter');
+  if(cf)cf.addEventListener('input',()=>{U.cfilter=cf.value;const pos=cf.selectionStart;render();const n=document.getElementById('cfilter');n.focus();try{n.setSelectionRange(pos,pos)}catch(e){}});
+}
+
+/* ========== モーダル ========== */
+let pendingYes=null;
+function modal(html){const m=$('#modal');m.innerHTML=`<div class="mbox">${html}</div>`;m.classList.add('on')}
+function closeModal(){$('#modal').classList.remove('on');$('#modal').innerHTML='';pendingYes=null}
+function confirmModal(t,msg,yes){pendingYes=yes;modal(`<h3>${t}</h3><p>${msg}</p><div class="mbtns"><button class="btn ghost" data-act="closeModal">いいえ</button><button class="btn" data-act="yes">はい</button></div>`)}
+function renameModal(first){modal(`<h3>${first?'ようこそ！':'ニックネーム'}</h3><p>${first?'ニックネームを決めてください。':'ニックネームを変更します。'}</p><input type="text" id="nm" maxlength="10" value="${esc(S.name)}" placeholder="ニックネーム（10文字まで）"><div class="mbtns">${first?'':'<button class="btn ghost" data-act="closeModal">やめる</button>'}<button class="btn" data-act="saveName">保存</button></div>`);setTimeout(()=>{const i=$('#nm');if(i)i.focus()},50)}
+function settingsModal(){
+  modal(`<h3>⚙️ 設定</h3><p style="margin-bottom:0">BGM 音量</p><input type="range" min="0" max="100" value="${Math.round(S.vol.bgm*100)}" data-vol="bgm"><p style="margin-bottom:0">効果音 音量</p><input type="range" min="0" max="100" value="${Math.round(S.vol.se*100)}" data-vol="se">
+  <h3 style="margin-top:16px">セーブデータ</h3>
+  <div class="arow"><div class="grow">このブラウザに保存<br><span class="st ${LS_OK?'':'no'}">${LS_OK?'有効':'使えません（閉じると消えます）'}</span></div></div>
+  <div class="arow"><div class="grow">クラウドに保存（claude.ai アカウント）<br><span class="st ${CL.ok?'':'no'}">${esc(CL.status)}</span></div></div>
+  <p class="note">引き継ぎコードを控えておくと、別の端末やブラウザでも続きから遊べます。</p>
+  <div class="mbtns" style="justify-content:flex-start;margin-top:6px"><button class="btn blue" data-act="codeOut">引き継ぎコードを出す</button><button class="btn ghost" data-act="codeIn">コードで復元</button></div>
+  <h3 style="margin-top:16px">画像・BGMの読み込み</h3><p class="note">用意した画像やmp3を選ぶと、仮のイラスト・音と入れ替わります。このブラウザの中だけに保存されます。</p>
+  ${ASSETS.map(([k,n,t])=>`<div class="arow"><div class="grow">${n}<br><span class="st ${A[k]?'':'no'}">${A[k]?'読み込み済み':'未設定（仮）'}</span></div><label class="fbtn">選ぶ<input type="file" accept="${t}/*" data-asset="${k}" hidden></label>${A[k]?`<button class="xbtn" data-act="delAsset" data-v="${k}">✕</button>`:''}</div>`).join('')}
+  <div class="mbtns" style="justify-content:space-between"><button class="btn ghost" data-act="resetAsk" style="font-size:12px">データを消す</button><button class="btn" data-act="closeModal">閉じる</button></div>`);
+}
+function eqModal(u){
+  const e=getEq(u);if(!e)return;const where=S.mons.find(m=>SLOTS.some(s=>m.eq[s]===u));
+  modal(`<div style="display:flex;gap:12px;align-items:center"><div class="cell r${e.rar}" style="width:64px">${eqIcon(e)}</div><div><h3 style="margin:0">${eqName(e)}${e.plus?` +${e.plus}`:''}</h3><div class="note">レアリティ ${RAR[e.rar]}　部位 ${SLOT_JP[e.slot]}</div></div></div>
+  <p>効果：${STAT_JP[SLOT_STAT[e.slot]]} +${eqBonus(e)}</p>${where?`<p class="note">${esc(SPECIES[where.id].n)} が装備中</p>`:''}
+  <p class="note">強化：${MATS.upLeather.ic} 革の強化そざい ×1（所持 ${S.items.upLeather}）　強化値 ${e.plus}/10</p>
+  <div class="mbtns"><button class="btn ghost" data-act="closeModal">閉じる</button><button class="btn blue" data-act="upgrade" data-v="${u}" ${S.items.upLeather<1||e.plus>=10?'disabled':''}>強化</button>${where?`<button class="btn" data-act="unequip" data-v="${u}">外す</button>`:`<button class="btn" data-act="equip" data-v="${u}">${esc(SPECIES[(mon(U.eqMon)||activeMon()).id].n)}に装備</button>`}</div>`);
+}
+function monModal(){
+  const m=activeMon(),s=stats(m);
+  modal(`<div style="display:flex;gap:12px;align-items:center">${monArt(m.id,'eqmon')}<div><h3 style="margin:0">${esc(SPECIES[m.id].n)}</h3><div>Lv.${m.lv}</div><div class="note">EXP ${fmt(m.exp)} / ${fmt(needExp(m.lv))}</div></div></div>
+  <div class="stats" style="margin-top:10px">${STAT_ORDER.map(k=>`<div>${STAT_JP[k]}<b>${f1(s.total[k])}</b>${s.eq[k]?`<em>（装備+${s.eq[k]}）</em>`:''}</div>`).join('')}</div>
+  <p class="note">放置で10秒ごとに1G、経験値も少しずつ入ります。</p><div class="mbtns"><button class="btn ghost" data-act="closeModal">閉じる</button></div>`);
+}
+
+/* ========== 冒険・戦闘 ========== */
+function floatText(t,c){const w=document.getElementById('homeMon');if(!w)return;const d=document.createElement('div');d.className='float';d.style.color=c||'#fff';d.textContent=t;w.appendChild(d);setTimeout(()=>d.remove(),1300)}
+function doAdv(){
+  S.stamina-=COST;const i=S.sel,win=Math.random()<winRate(i,activeMon());const r=resolveAdventure(i,win);
+  const w=document.querySelector('#homeMon .mon');if(w){w.classList.remove('hop');void w.offsetWidth;w.classList.add('hop');setTimeout(()=>w.classList.remove('hop'),460)}
+  if(win){floatText(`${STAGES[i].id} クリア！ +${r.gold}G +${r.exp}EXP`,'#ffe27a');se('coin')}else{floatText(`${STAGES[i].id} 失敗…`,'#ffb0b0');se('lose')}
+  for(const k in r.drops)toast(`${MATS[k].ic} ${MATS[k].n} ×${r.drops[k]} を手に入れた`);
+  if(r.unlock){toast(`ステージ ${r.unlock} が解放された！`);const sb=document.querySelector('.stagebox b');if(sb)sb.textContent=STAGES[S.sel].id}
+  if(r.recruit)toast(`${SPECIES[r.recruit].n} が仲間になった！`);
+  updateHUD();save();
+}
+let hold=null;
+function advDown(b){hold={b,on:false,t:setTimeout(()=>{hold.on=true;b.classList.add('holding');const go=()=>{if(S.stamina<COST){advStop();ensureStamina(()=>{});return}doAdv()};go();hold.iv=setInterval(go,420)},450)}}
+function advStop(){if(!hold)return;clearTimeout(hold.t);clearInterval(hold.iv);hold.b.classList.remove('holding');hold=null}
+function genEvents(win,allyFirst){
+  let a=100,e=100,turn=allyFirst?'ally':'enemy';const ev=[];
+  for(let g=0;g<40;g++){
+    const attackerWins=(turn==='ally')===win;let d=attackerWins?ri(26,40):ri(8,22);
+    if(turn==='ally'){if(!attackerWins)d=Math.max(0,Math.min(d,e-ri(4,12)));e=Math.max(0,e-d);ev.push({w:'ally',d,a,e});if(e<=0)break}
+    else{if(!attackerWins)d=Math.max(0,Math.min(d,a-ri(4,12)));a=Math.max(0,a-d);ev.push({w:'enemy',d,a,e});if(a<=0)break}
+    turn=turn==='ally'?'enemy':'ally';
+  }return ev;
+}
+function startBattle(i){
+  if(i>S.cleared)return toast('まだ解放されていません');
+  ensureStamina(()=>{
+    S.stamina-=COST;const m=activeMon(),st=STAGES[i];S.seen[st.enemy]=true;
+    const win=Math.random()<winRate(i,m),aSpd=stats(m).total.spd,eSpd=SPECIES[st.enemy].base.spd*Math.pow(1.05,st.rec-1);
+    B={i,en:st.enemy,win,ev:genEvents(win,aSpd>=eSpd),k:0,gen:++battleGen};
+    closeModal();U.scr='battle';render();toBattleAudio();save();
+    setTimeout(()=>battleStep(B.gen),sp(1500));
+  });
+}
+const SPDS=[1,1.5,2];
+function spdBtn(){const v=S.spd||1;return`<button class="spdbtn ${v>1?'on':''}" id="spdBtn" data-act="speed">⏩ ${v===1?'OFF':v.toFixed(1)+'×'}</button>`}
+const sp=ms=>ms/(S.spd||1);
+function setHP(id,v){const el=document.getElementById(id);if(!el)return;el.style.width=v+'%';el.className=v<25?'crit':v<50?'low':''}
+function popDmg(target,d){const f=document.getElementById('bfield'),t=document.getElementById(target);if(!f||!t)return;const x=document.createElement('div');x.className='dmg';x.textContent=d?d:'MISS';
+  x.style.left=(t.offsetLeft+t.offsetWidth/2-18)+'px';x.style.top=(t.offsetTop-10)+'px';f.appendChild(x);setTimeout(()=>x.remove(),1000)}
+function battleStep(gen){
+  if(!B||gen!==B.gen||U.scr!=='battle')return;
+  if(B.k>=B.ev.length)return finishBattle();
+  const ev=B.ev[B.k++],att=document.getElementById(ev.w==='ally'?'bAlly':'bEnemy'),tgt=ev.w==='ally'?'bEnemy':'bAlly';
+  const inner=ev.w==='ally'?att:att.firstElementChild;
+  inner.classList.remove('lungeR','lungeL');void inner.offsetWidth;inner.classList.add(ev.w==='ally'?'lungeR':'lungeR');se('atk');
+  setTimeout(()=>{if(gen!==B.gen)return;const t=document.getElementById(tgt),ti=tgt==='bAlly'?t:t.firstElementChild;ti.classList.remove('hit');void ti.offsetWidth;ti.classList.add('hit');se('hit');setHP('hpA',ev.a);setHP('hpE',ev.e);popDmg(tgt,ev.d)},sp(200));
+  setTimeout(()=>battleStep(gen),sp(900));
+}
+function finishBattle(){
+  const r=resolveAdventure(B.i,B.win);se(B.win?'win':'lose');save();
+  const lines=B.win?rewardText(r):['ユーザーEXP +10','レベルを上げるか、装備を強化してまた挑もう'];
+  if(r.unlock)lines.push(`🔓 ステージ ${r.unlock} 解放！`);
+  if(r.recruit)lines.push(`🎉 ${SPECIES[r.recruit].n} が仲間になった！`);
+  document.getElementById('bres').innerHTML=`<div class="bres"><div class="card"><h3>${B.win?'勝利！':'敗北…'}</h3>${B.win&&r.recruit?monArt(r.recruit,'eqmon','')+'':''}${lines.map(l=>`<div style="margin:3px 0">${l}</div>`).join('')}
+  <div class="btns"><button class="btn red" data-act="battleAgain">もう一度（⚡${COST}）</button><button class="btn" data-act="go" data-v="world">ステージ選択へ</button><button class="btn ghost" data-act="go" data-v="home">ホームへ</button></div></div></div>`;
+  updateHUD();
+}
+
+/* ========== 装備操作 ========== */
+function equipTo(mid,u){
+  const m=mon(mid),e=getEq(u);if(!m||!e)return;
+  for(const x of S.mons)for(const s of SLOTS)if(x.eq[s]===u)x.eq[s]=null;
+  m.eq[e.slot]=u;se('coin');toast(`${eqName(e)} を装備した`);save();
+}
+function unequip(u){
+  if(freeEquips().length>=50)return toast('装備欄がいっぱいです');
+  for(const x of S.mons)for(const s of SLOTS)if(x.eq[s]===u)x.eq[s]=null;se('click');save();
+}
+let drag=null,suppressClick=false;
+function dropAt(x,y){
+  const g=drag.ghost;g.style.display='none';const el=document.elementFromPoint(x,y);g.style.display='';
+  const tgt=el&&el.closest('[data-drop]');if(!tgt)return;
+  const e=getEq(drag.uid);if(!e)return;
+  if(tgt.dataset.drop==='slot'){if(e.slot!==tgt.dataset.slot)return toast('その部位には付けられません');if(drag.from==='slot'&&mon(U.eqMon).eq[e.slot]===e.uid)return;equipTo(U.eqMon,e.uid)}
+  else if(tgt.dataset.drop==='storage'&&drag.from==='slot'){unequip(e.uid)}
+  render();
+}
+
+/* ========== 入力 ========== */
+const ACT={
+  go(el){const v=el.dataset.v;if(U.scr==='battle'&&v!=='battle'){B=null;battleGen++;toHomeAudio()}closeModal();U.scr=v==='home'&&U.scr==='ruck'&&el.closest('.nav')?'home':v;if(v==='ruck'){U.sub='items'}if(v==='mission')U.copen=S.active;render()},
+  sub(el){U.sub=el.dataset.v;U.dis.clear();if(U.sub==='equip')U.eqMon=S.active;render()},
+  settings(){settingsModal()},
+  rename(){renameModal(false)},
+  saveName(){const v=($('#nm').value||'').trim();if(!v)return toast('ニックネームを入力してください');S.name=v.slice(0,10);save();closeModal();render()},
+  closeModal(){closeModal()},
+  yes(){const f=pendingYes;closeModal();if(f)f()},
+  monInfo(){monModal()},
+  matInfo(el){const k=el.dataset.k;modal(`<h3>${MATS[k].ic} ${MATS[k].n}</h3><p>${MATS[k].d}</p><p class="note">所持 ${S.items[k]}</p><div class="mbtns"><button class="btn ghost" data-act="closeModal">閉じる</button>${k==='potion'?'<button class="btn" data-act="usePot">使う</button>':''}</div>`)},
+  usePot(){closeModal();usePotion();render()},
+  eqInfo(el){eqModal(el.dataset.uid)},
+  eqMon(el){U.eqMon=el.dataset.v;render()},
+  equip(el){equipTo(U.eqMon||S.active,el.dataset.v);closeModal();render()},
+  unequip(el){unequip(el.dataset.v);closeModal();render()},
+  upgrade(el){const e=getEq(el.dataset.v);if(!e||S.items.upLeather<1||e.plus>=10)return;S.items.upLeather--;e.plus++;se('lv');toast(`${eqName(e)} +${e.plus} に強化！`);save();eqModal(e.uid);render()},
+  forgeTab(el){U.forge=el.dataset.v;U.dis.clear();render()},
+  synth(el){const [b,sl,r]=el.dataset.v.split('|');const list=freeEquips().filter(e=>e.base===b&&e.slot===sl&&e.rar===+r).sort((x,y)=>x.plus-y.plus).slice(0,4);if(list.length<4)return;
+    const ids=new Set(list.map(e=>e.uid));S.equips=S.equips.filter(e=>!ids.has(e.uid));const n=mkEq(b,sl,+r+1);S.equips.push(n);se('lv');save();render();
+    modal(`<h3>合成成功！</h3><div style="display:flex;gap:12px;align-items:center"><div class="cell r${n.rar}" style="width:64px">${eqIcon(n)}</div><div><b>${eqName(n)}</b><div class="note">${RAR[n.rar]}　${STAT_JP[SLOT_STAT[n.slot]]} +${eqBonus(n)}</div></div></div><div class="mbtns"><button class="btn" data-act="closeModal">OK</button></div>`)},
+  disTog(el){const u=el.dataset.uid;U.dis.has(u)?U.dis.delete(u):U.dis.add(u);render()},
+  disClear(){U.dis.clear();render()},
+  disDo(){const n=U.dis.size;confirmModal('分解',`選んだ ${n} 個の装備を分解しますか？<br><small>元には戻せません</small>`,()=>{const got={};for(const u of U.dis){const e=getEq(u);if(!e||isEquipped(u))continue;const mat=BASES[e.base].mat;got[mat]=(got[mat]||0)+1+e.rar;S.items[mat]+=1+e.rar}
+    S.equips=S.equips.filter(e=>!U.dis.has(e.uid)||isEquipped(e.uid));U.dis.clear();se('coin');save();render();toast('分解：'+Object.keys(got).map(k=>`${MATS[k].n}×${got[k]}`).join('、'))})},
+  craft(el){const b=el.dataset.v,mat=BASES[b].mat,need=b==='leather'?3:5;if(S.items[mat]<need)return;if(freeEquips().length>=50)return toast('装備欄がいっぱいです');
+    const x=Math.random(),rar=x<.01?3:x<.08?2:x<.30?1:0,e=mkEq(b,SLOTS[ri(0,3)],rar);S.items[mat]-=need;S.equips.push(e);se('lv');save();render();
+    modal(`<h3>クラフト完成！</h3><div style="display:flex;gap:12px;align-items:center"><div class="cell r${e.rar}" style="width:64px">${eqIcon(e)}</div><div><b>${eqName(e)}</b><div class="note">${RAR[e.rar]}　${STAT_JP[SLOT_STAT[e.slot]]} +${eqBonus(e)}</div></div></div><div class="mbtns"><button class="btn" data-act="closeModal">OK</button></div>`)},
+  setActive(el){S.active=el.dataset.v;U.eqMon=S.active;save();toast(`${SPECIES[S.active].n} をホームに出しました`);render()},
+  buy(el){const k=el.dataset.v,p=+el.dataset.p;if(S.gold<p)return toast('ゴールドが足りません');S.gold-=p;S.items[k]++;se('coin');toast(`${MATS[k].n} を買った`);save();render()},
+  claimAll(){const M=missions(),all=[...M.stage,...M.user,...Object.values(M.chara).flat()].filter(x=>x.done&&!S.claimed[x.k]);if(!all.length)return;
+    const tot={potion:0,scrap:0,stam:0};for(const x of all){S.claimed[x.k]=true;const b={...S.items},st=S.stamina;x.give();tot.potion+=S.items.potion-b.potion;tot.scrap+=S.items.scrap-b.scrap;tot.stam+=S.stamina-st}
+    se('coin');save();render();const L=[];if(tot.potion)L.push(`🧪 スタミナ剤 ×${tot.potion}`);if(tot.scrap)L.push(`🟫 かわのきれはし ×${tot.scrap}`);if(tot.stam)L.push(`⚡ スタミナ +${tot.stam}`);
+    modal(`<h3>まとめて受け取りました（${all.length}件）</h3>${L.map(l=>`<p>${l}</p>`).join('')}<div class="mbtns"><button class="btn" data-act="closeModal">OK</button></div>`)},
+  mtab(el){U.mtab=el.dataset.v;render()},
+  copen(el){U.copen=U.copen===el.dataset.v?null:el.dataset.v;render()},
+  claim(el){const M=missions(),x=[...M.stage,...M.user,...Object.values(M.chara).flat()].find(q=>q.k===el.dataset.v);if(!x||!x.done||S.claimed[x.k])return;S.claimed[x.k]=true;x.give();se('coin');toast(`報酬を受け取った：${x.rw}`);save();render()},
+  wpt(el){if(+el.dataset.v===0){U.scr='world';render()}else toast(`${WPTS[+el.dataset.v].n} はまだ解放されていません`)},
+  selStage(el){const i=+el.dataset.v;if(i>S.cleared)return toast('前のステージをクリアすると解放されます');S.sel=i;save();render()},
+  battle(){startBattle(S.sel)},
+  speed(){const i=SPDS.indexOf(S.spd||1);S.spd=SPDS[(i+1)%SPDS.length];save();const b=document.getElementById('spdBtn');if(b)b.outerHTML=spdBtn();const sc=document.getElementById('bscr');if(sc)sc.style.setProperty('--spd',S.spd)},
+  battleAgain(){startBattle(B?B.i:S.sel)},
+  delAsset(el){delAsset(el.dataset.v).then(()=>{if(el.dataset.v.startsWith('bgm')){const md=AU.mode;stopBgm();if(md)playSong(md)}settingsModal();render()})},
+  codeOut(){const c=exportCode();modal(`<h3>引き継ぎコード</h3><p class="note">全部コピーして、メモなどに保存してください。</p><textarea id="codeBox" readonly style="width:100%;height:140px;font-size:11px;background:#1a110a;color:#fff;border:2px solid #f0a640;border-radius:10px;padding:8px">${c}</textarea><div class="mbtns"><button class="btn ghost" data-act="settings">戻る</button><button class="btn" data-act="codeCopy">コピー</button></div>`)},
+  codeCopy(){const b=$('#codeBox');b.focus();b.select();const done=()=>toast('コピーしました');try{navigator.clipboard.writeText(b.value).then(done,()=>{try{document.execCommand('copy');done()}catch(e){toast('長押しでコピーしてください')}})}catch(e){try{document.execCommand('copy');done()}catch(_){toast('長押しでコピーしてください')}}},
+  codeIn(){modal(`<h3>コードで復元</h3><p class="note">引き継ぎコードを貼り付けてください。いまのデータは上書きされます。</p><textarea id="codeBox" style="width:100%;height:140px;font-size:11px;background:#1a110a;color:#fff;border:2px solid #f0a640;border-radius:10px;padding:8px;-webkit-user-select:text;user-select:text"></textarea><div class="mbtns"><button class="btn ghost" data-act="settings">戻る</button><button class="btn red" data-act="codeApply">復元する</button></div>`)},
+  codeApply(){let o;try{o=importCode($('#codeBox').value)}catch(e){return toast('コードが正しくありません')}closeModal();applySave(o);save();cloudSave();toast('データを復元しました')},
+  resetAsk(){confirmModal('データを消す','セーブデータを消して最初からにしますか？<br><small>読み込んだ画像・BGMは残ります</small>',()=>{try{localStorage.removeItem(KEY)}catch(e){}S=newState();save();cloudSave();U.scr='home';U.eqMon=S.active;render();renameModal(true)})}
+};
+document.addEventListener('click',e=>{
+  if(suppressClick){suppressClick=false;return}
+  const el=e.target.closest('[data-act]');if(!el)return;
+  if(el.id==='modal')return;se('click');const f=ACT[el.dataset.act];if(f)f(el,e);
+});
+document.addEventListener('pointerdown',e=>{
+  initAudio();if(AU.ctx&&AU.ctx.state==='suspended')AU.ctx.resume();
+  const b=e.target.closest('#advBtn');if(b){advDown(b);return}
+  const d=e.target.closest('[data-drag]');if(d&&U.scr==='ruck'&&U.sub==='equip')drag={el:d,uid:d.dataset.drag,from:d.dataset.from,x:e.clientX,y:e.clientY,ghost:null};
+});
+document.addEventListener('pointermove',e=>{
+  if(!drag)return;
+  if(!drag.ghost){if(Math.hypot(e.clientX-drag.x,e.clientY-drag.y)<8)return;const g=document.createElement('div');g.className='dragghost cell r'+getEq(drag.uid).rar;g.innerHTML=drag.el.innerHTML;document.body.appendChild(g);drag.ghost=g;drag.el.style.opacity='.35'}
+  drag.ghost.style.left=e.clientX+'px';drag.ghost.style.top=e.clientY+'px';
+  document.querySelectorAll('.slot.hot,.storage.hot').forEach(x=>x.classList.remove('hot'));
+  drag.ghost.style.display='none';const el=document.elementFromPoint(e.clientX,e.clientY);drag.ghost.style.display='';
+  const t=el&&el.closest('[data-drop]');if(t)t.classList.add('hot');
+});
+function endPointer(e){
+  if(hold){const on=hold.on;advStop();if(!on&&e.type==='pointerup'&&e.target.closest&&e.target.closest('#advBtn'))ensureStamina(doAdv)}
+  if(drag){if(drag.ghost){suppressClick=true;setTimeout(()=>suppressClick=false,50);dropAt(e.clientX,e.clientY);drag.ghost.remove()}if(drag.el)drag.el.style.opacity='';drag=null}
+}
+document.addEventListener('pointerup',endPointer);
+document.addEventListener('pointercancel',endPointer);
+document.addEventListener('contextmenu',e=>{if(e.target.closest('#advBtn,[data-drag]'))e.preventDefault()});
+document.addEventListener('input',e=>{const k=e.target.dataset&&e.target.dataset.vol;if(k){S.vol[k]=e.target.value/100;applyVol();save()}});
+document.addEventListener('change',e=>{const k=e.target.dataset&&e.target.dataset.asset;if(!k||!e.target.files[0])return;
+  putAsset(k,e.target.files[0]).then(()=>{toast('読み込みました');if(k.startsWith('bgm')){const md=AU.mode;stopBgm();if(md)playSong(md)}settingsModal();render()})});
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&$('#nm'))ACT.saveName()});
+document.addEventListener('visibilitychange',()=>{if(document.hidden){tick();save();cloudSave()}});
+window.addEventListener('pagehide',()=>{tick();save();cloudSave()});
+
+/* ========== 起動 ========== */
+(async function boot(){
+  await loadAssets();
+  const off=tick();render();
+  if(!S.name)renameModal(true);
+  else if(off.dt>60&&(off.g||off.e)){modal(`<h3>おかえりなさい！</h3><p>${esc(SPECIES[activeMon().id].n)} が放置中にがんばりました。</p><p>💰 +${fmt(off.g)}G<br>✨ +${fmt(off.e)}EXP</p><div class="mbtns"><button class="btn" data-act="closeModal">OK</button></div>`)}
+  setInterval(()=>{tick();updateHUD()},1000);
+  setInterval(save,5000);
+  setInterval(cloudSave,20000);
+  cloudInit();
+  try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist()}catch(e){}
+  if(!LS_OK)setTimeout(()=>{if(!CL.ok)toast('この開き方ではセーブが残りません。⚙️の引き継ぎコードで控えてください')},12000);
+})();
+</script>
+</body>
+</html>
